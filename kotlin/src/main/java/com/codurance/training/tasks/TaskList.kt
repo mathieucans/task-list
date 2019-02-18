@@ -56,7 +56,7 @@ class TaskList(private val `in`: BufferedReader, private val out: PrintWriter) :
             "check" -> return CommandCheck(commandRest)
             "uncheck" -> return CommandUncheck(commandRest)
             "help" -> return CommandHelp()
-            "deadline" -> return CommandDeadLine()
+            "deadline" -> return CommandDeadLine(commandRest[1])
             else -> kotlin.error(command)
         }
     }
