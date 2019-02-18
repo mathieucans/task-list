@@ -51,6 +51,26 @@ public final class ApplicationTest {
         throw new IllegalStateException("The application is still running.");
     }
 
+
+    @Test(timeout = 1000) public void
+    optional_deadline_can_be_add() throws IOException {
+        execute("show");
+
+        execute("add project secrets");
+        execute("add task secrets Eat more donuts.");
+        execute("add task secrets Destroy all humans.");
+
+        execute("deadline 1 18/02/2019 20:30:00");
+
+        execute("show");
+        readLines(
+                "secrets",
+                "    [ ] 1: Eat more donuts. (18/02/2019 20:30:00)",
+                "    [ ] 2: Destroy all humans.",
+                ""
+        );
+    }
+
     @Test(timeout = 1000) public void
     it_works() throws IOException {
         execute("show");

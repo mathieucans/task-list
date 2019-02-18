@@ -31,16 +31,21 @@ class TaskList(private val `in`: BufferedReader, private val out: PrintWriter) :
     }
 
     private fun execute(commandLine: String) {
-        val commandRest = commandLine.split(" ".toRegex(), 2).toTypedArray()
-        val command = commandRest[0]
-        when (command) {
+        val command = buildCommand(commandLine)
+        when (command.command) {
             "show" -> show()
-            "add" -> add(commandRest[1])
-            "check" -> check(commandRest[1])
-            "uncheck" -> uncheck(commandRest[1])
+            "add" -> add(command.arguments[1])
+            "check" -> check(command.arguments[1])
+            "uncheck" -> uncheck(command.arguments[1])
             "help" -> help()
             else -> error(command)
         }
+    }
+
+    private fun buildCommand(commandLine: String): TasklistCommand {
+        val commandRest = commandLine.split(" ".toRegex(), 2).toTypedArray()
+        val command = commandRest[0]
+        return TasklistCommand (command, commandRest)
     }
 
     private fun show() {
