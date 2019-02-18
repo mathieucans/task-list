@@ -32,20 +32,33 @@ class TaskList(private val `in`: BufferedReader, private val out: PrintWriter) :
 
     private fun execute(commandLine: String) {
         val command = buildCommand(commandLine)
-        when (command.command) {
-            "show" -> show()
-            "add" -> add(command.arguments[1])
-            "check" -> check(command.arguments[1])
-            "uncheck" -> uncheck(command.arguments[1])
-            "help" -> help()
+        when (command) {
+            is CommandShow -> show()
+            is CommandAdd -> add(command.commandRest[1])
+            is CommandCheck -> check(command.commandRest[1])
+            is CommandUncheck -> uncheck(command.commandRest[1])
+            is CommandDeadLine -> deadLine(command)
+            is CommandHelp -> help()
             else -> error(command)
         }
+    }
+
+    private fun deadLine(command: CommandDeadLine) {
+
     }
 
     private fun buildCommand(commandLine: String): TasklistCommand {
         val commandRest = commandLine.split(" ".toRegex(), 2).toTypedArray()
         val command = commandRest[0]
-        return TasklistCommand (command, commandRest)
+        when (command) {
+            "show"-> return CommandShow()
+            "add" -> return CommandAdd(commandRest)
+            "check" -> return CommandCheck(commandRest)
+            "uncheck" -> return CommandUncheck(commandRest)
+            "help" -> return CommandHelp()
+            "deadline" -> return CommandDeadLine()
+            else -> kotlin.error(command)
+        }
     }
 
     private fun show() {
