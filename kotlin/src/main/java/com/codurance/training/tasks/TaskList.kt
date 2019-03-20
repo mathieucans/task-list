@@ -36,7 +36,8 @@ class TaskList(private val `in`: BufferedReader, private val out: PrintWriter) :
         when (command) {
             is CommandShow -> show()
             is CommandHelp -> help()
-            is CommandAdd -> add(command.commandRest)
+            is CommandAddProject -> addProject(command.commandRest)
+            is CommandAddTask -> addTask(command.project, command.description)
             is CommandCheck -> check(command.commandRest)
             is CommandUncheck -> uncheck(command.commandRest)
             is UnknownCommand -> error(command.command)
@@ -49,11 +50,24 @@ class TaskList(private val `in`: BufferedReader, private val out: PrintWriter) :
         return when (command) {
             "show" -> CommandShow()
             "help" -> CommandHelp()
-            "add" -> CommandAdd(commandRest[1])
+            "add" -> buildCommandAdd(commandRest[1])
             "check" -> CommandCheck(commandRest[1])
             "uncheck" -> CommandUncheck(commandRest[1])
             else -> UnknownCommand(command)
         }
+    }
+
+    private fun buildCommandAdd(commandLine: String): Command {
+        val subcommandRest = commandLine.split(" ".toRegex(), 2).toTypedArray()
+        val subcommand = subcommandRest[0]
+        if (subcommand == "project") {
+            return CommandAddProject(subcommandRest[1])
+        } else if (subcommand == "task") {
+            val projectTask = subcommandRest[1].split(" ".toRegex(), 2).toTypedArray()
+            return CommandAddTask(projectTask[0], projectTask[1])
+        }
+        else
+            return UnknownCommand(commandLine)
     }
 
     private fun show() {
@@ -63,17 +77,6 @@ class TaskList(private val `in`: BufferedReader, private val out: PrintWriter) :
                 out.printf("    [%c] %d: %s%n", if (task.isDone) 'x' else ' ', task.id, task.description)
             }
             out.println()
-        }
-    }
-
-    private fun add(commandLine: String) {
-        val subcommandRest = commandLine.split(" ".toRegex(), 2).toTypedArray()
-        val subcommand = subcommandRest[0]
-        if (subcommand == "project") {
-            addProject(subcommandRest[1])
-        } else if (subcommand == "task") {
-            val projectTask = subcommandRest[1].split(" ".toRegex(), 2).toTypedArray()
-            addTask(projectTask[0], projectTask[1])
         }
     }
 
