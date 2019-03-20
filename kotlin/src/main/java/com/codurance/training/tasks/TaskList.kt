@@ -16,30 +16,43 @@ class TaskList(private val `in`: BufferedReader, private val out: PrintWriter) :
         while (true) {
             out.print("> ")
             out.flush()
-            val command: String
+            val commandLine: String
             try {
-                command = `in`.readLine()
+                commandLine = `in`.readLine()
             } catch (e: IOException) {
                 throw RuntimeException(e)
             }
 
-            if (command == QUIT) {
+            if (commandLine == QUIT) {
                 break
             }
+
+            val command = buildCommand(commandLine)
             execute(command)
         }
     }
 
-    private fun execute(commandLine: String) {
+    private fun execute(command: Command) {
+        when (command) {
+            is CommandShow -> show()
+            is CommandHelp -> help()
+            is CommandAdd -> add(command.commandRest)
+            is CommandCheck -> check(command.commandRest)
+            is CommandUncheck -> uncheck(command.commandRest)
+            is UnknownCommand -> error(command.command)
+        }
+    }
+
+    private fun buildCommand(commandLine: String) : Command {
         val commandRest = commandLine.split(" ".toRegex(), 2).toTypedArray()
         val command = commandRest[0]
-        when (command) {
-            "show" -> show()
-            "add" -> add(commandRest[1])
-            "check" -> check(commandRest[1])
-            "uncheck" -> uncheck(commandRest[1])
-            "help" -> help()
-            else -> error(command)
+        return when (command) {
+            "show" -> CommandShow()
+            "help" -> CommandHelp()
+            "add" -> CommandAdd(commandRest[1])
+            "check" -> CommandCheck(commandRest[1])
+            "uncheck" -> CommandUncheck(commandRest[1])
+            else -> UnknownCommand(command)
         }
     }
 
