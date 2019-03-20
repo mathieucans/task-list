@@ -1,5 +1,11 @@
 package com.codurance.training.tasks
 
-class CommandUncheck(val commandRest: String) : Command {
+class CommandUncheck : Command {
+
+    val taskId: TaskId
+
+    constructor(commandRest: String) {
+        taskId = TaskId(Integer.parseInt(commandRest).toLong())
+    }
 
 }

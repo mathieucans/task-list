@@ -38,13 +38,13 @@ class TaskList(private val `in`: BufferedReader, private val out: PrintWriter) :
             is CommandHelp -> help()
             is CommandAddProject -> addProject(command.commandRest)
             is CommandAddTask -> addTask(command.project, command.description)
-            is CommandCheck -> check(command.commandRest)
-            is CommandUncheck -> uncheck(command.commandRest)
+            is CommandCheck -> check(command.taskId)
+            is CommandUncheck -> uncheck(command.taskId)
             is UnknownCommand -> error(command.command)
         }
     }
 
-    private fun buildCommand(commandLine: String) : Command {
+    private fun buildCommand(commandLine: String): Command {
         val commandRest = commandLine.split(" ".toRegex(), 2).toTypedArray()
         val command = commandRest[0]
         return when (command) {
@@ -65,8 +65,7 @@ class TaskList(private val `in`: BufferedReader, private val out: PrintWriter) :
         } else if (subcommand == "task") {
             val projectTask = subcommandRest[1].split(" ".toRegex(), 2).toTypedArray()
             return CommandAddTask(projectTask[0], projectTask[1])
-        }
-        else
+        } else
             return UnknownCommand(commandLine)
     }
 
@@ -74,7 +73,7 @@ class TaskList(private val `in`: BufferedReader, private val out: PrintWriter) :
         for ((key, value) in tasks) {
             out.println(key)
             for (task in value) {
-                out.printf("    [%c] %d: %s%n", if (task.isDone) 'x' else ' ', task.id, task.description)
+                out.printf("    [%c] %d: %s%n", if (task.isDone) 'x' else ' ', task.id.id, task.description)
             }
             out.println()
         }
@@ -94,25 +93,24 @@ class TaskList(private val `in`: BufferedReader, private val out: PrintWriter) :
         projectTasks.add(Task(nextId(), description, false))
     }
 
-    private fun check(idString: String) {
-        setDone(idString, true)
+    private fun check(taskId: TaskId) {
+        setDone(true, taskId)
     }
 
-    private fun uncheck(idString: String) {
-        setDone(idString, false)
+    private fun uncheck(taskId: TaskId) {
+        setDone(false, taskId)
     }
 
-    private fun setDone(idString: String, done: Boolean) {
-        val id = Integer.parseInt(idString)
+    private fun setDone(done: Boolean, taskId: TaskId) {
         for ((_, value) in tasks) {
             for (task in value) {
-                if (task.id == id.toLong()) {
+                if (task.id == taskId) {
                     task.isDone = done
                     return
                 }
             }
         }
-        out.printf("Could not find a task with an ID of %d.", id)
+        out.printf("Could not find a task with an ID of %d.", taskId.id)
         out.println()
     }
 
@@ -131,8 +129,8 @@ class TaskList(private val `in`: BufferedReader, private val out: PrintWriter) :
         out.println()
     }
 
-    private fun nextId(): Long {
-        return ++lastId
+    private fun nextId(): TaskId {
+        return TaskId(++lastId)
     }
 
     companion object {
