@@ -24,4 +24,11 @@ class TaskId(private val id: Long) {
         fun serializeTaskId(id: Long)
     }
 
+    companion object {
+        private var lastId: Long = 0
+
+        fun nextId(): TaskId {
+            return TaskId(++lastId)
+        }
+    }
 }
