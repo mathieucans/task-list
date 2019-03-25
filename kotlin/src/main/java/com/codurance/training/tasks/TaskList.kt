@@ -1,5 +1,6 @@
 package com.codurance.training.tasks
 
+import com.codurance.training.tasks.command.*
 import com.codurance.training.tasks.terminal.PrintfTaskIdSerializer
 import com.codurance.training.tasks.terminal.PrintfTaskSerializer
 import java.io.BufferedReader
@@ -8,7 +9,7 @@ import java.io.InputStreamReader
 import java.io.PrintWriter
 import java.util.*
 
-class TaskList(private val `in`: BufferedReader, private val out: PrintWriter) : Runnable {
+class TaskList(private val `in`: BufferedReader, private val out: PrintWriter) : Runnable, CommandExecutor {
 
     private val tasks = LinkedHashMap<String, MutableList<Task>>()
 
@@ -30,19 +31,7 @@ class TaskList(private val `in`: BufferedReader, private val out: PrintWriter) :
             }
 
             val command = buildCommand(commandLine)
-            execute(command)
-        }
-    }
-
-    private fun execute(command: Command) {
-        when (command) {
-            is CommandShow -> show()
-            is CommandHelp -> help()
-            is CommandAddProject -> addProject(command.commandRest)
-            is CommandAddTask -> addTask(command.project, command.description)
-            is CommandCheck -> check(command.taskId)
-            is CommandUncheck -> uncheck(command.taskId)
-            is UnknownCommand -> error(command.command)
+            command.execute(this)
         }
     }
 
@@ -71,7 +60,7 @@ class TaskList(private val `in`: BufferedReader, private val out: PrintWriter) :
             return UnknownCommand(commandLine)
     }
 
-    private fun show() {
+    override fun show() {
         for ((key, value) in tasks) {
             out.println(key)
             for (task in value) {
@@ -81,11 +70,11 @@ class TaskList(private val `in`: BufferedReader, private val out: PrintWriter) :
         }
     }
 
-    private fun addProject(name: String) {
+    override fun addProject(name: String) {
         tasks[name] = ArrayList()
     }
 
-    private fun addTask(project: String, description: String) {
+    override fun addTask(project: String, description: String) {
         val projectTasks = tasks[project]
         if (projectTasks == null) {
             out.printf("Could not find a project with the name \"%s\".", project)
@@ -95,11 +84,11 @@ class TaskList(private val `in`: BufferedReader, private val out: PrintWriter) :
         projectTasks.add(Task(nextId(), description, false))
     }
 
-    private fun check(taskId: TaskId) {
+    override fun check(taskId: TaskId) {
         setDone(true, taskId)
     }
 
-    private fun uncheck(taskId: TaskId) {
+    override fun uncheck(taskId: TaskId) {
         setDone(false, taskId)
     }
 
@@ -116,7 +105,7 @@ class TaskList(private val `in`: BufferedReader, private val out: PrintWriter) :
         out.println()
     }
 
-    private fun help() {
+    override fun help() {
         out.println("Commands:")
         out.println("  show")
         out.println("  add project <project name>")
@@ -126,7 +115,7 @@ class TaskList(private val `in`: BufferedReader, private val out: PrintWriter) :
         out.println()
     }
 
-    private fun error(command: String) {
+    override fun error(command: String) {
         out.printf("I don't know what the command \"%s\" is.", command)
         out.println()
     }
