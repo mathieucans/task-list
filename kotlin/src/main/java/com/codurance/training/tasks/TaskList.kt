@@ -1,5 +1,6 @@
 package com.codurance.training.tasks
 
+import com.codurance.training.tasks.terminal.PrintfTaskSerializer
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
@@ -73,7 +74,11 @@ class TaskList(private val `in`: BufferedReader, private val out: PrintWriter) :
         for ((key, value) in tasks) {
             out.println(key)
             for (task in value) {
-                out.printf("    [%c] %d: %s%n", if (task.isDone) 'x' else ' ', task.id.id, task.description)
+
+                out.printf("    [%c]", if (task.isDone) 'x' else ' ', task.description)
+                task.id.serialize(PrintfTaskSerializer(out, " %d: "))
+                out.printf(task.description)
+                out.println()
             }
             out.println()
         }
@@ -110,7 +115,7 @@ class TaskList(private val `in`: BufferedReader, private val out: PrintWriter) :
                 }
             }
         }
-        out.printf("Could not find a task with an ID of %d.", taskId.id)
+        taskId.serialize(PrintfTaskSerializer(out, "Could not find a task with an ID of %d."))
         out.println()
     }
 
