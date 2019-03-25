@@ -107,13 +107,17 @@ public final class ApplicationTest {
     private void read(String expectedOutput) throws IOException {
         int length = expectedOutput.length();
         char[] buffer = new char[length];
-        outReader.read(buffer, 0, length);
+        int numberOfCharactersRead = outReader.read(buffer, 0, length);
+        assertThat(numberOfCharactersRead, is(length));
         assertThat(String.valueOf(buffer), is(expectedOutput));
     }
 
     private void readLines(String... expectedOutput) throws IOException {
         for (String line : expectedOutput) {
-            read(line + lineSeparator());
+
+           // read(line + lineSeparator());
+           String buffer = outReader.readLine();
+           assertThat(buffer, is(line));
         }
     }
 
