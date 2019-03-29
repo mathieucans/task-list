@@ -1,18 +1,17 @@
 package com.codurance.training.tasks
 
-import com.codurance.training.tasks.command.*
-import com.codurance.training.tasks.terminal.PrintfProjectNameSerializer
+import com.codurance.training.tasks.command.CommandBuilder
+import com.codurance.training.tasks.command.CommandExecutor
+import com.codurance.training.tasks.terminal.PrintfProjectAndTaskSerializer
 import com.codurance.training.tasks.terminal.PrintfTaskIdSerializer
-import com.codurance.training.tasks.terminal.PrintfTaskSerializer
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
 import java.io.PrintWriter
-import java.util.*
 
 class TaskList(private val `in`: BufferedReader, private val out: PrintWriter) : Runnable, CommandExecutor {
 
-    private val tasks = LinkedHashMap<ProjectName, MutableList<Task>>()
+    private val tasks = ProjectAndTasks()
 
 
     override fun run() {
@@ -35,27 +34,20 @@ class TaskList(private val `in`: BufferedReader, private val out: PrintWriter) :
     }
 
     override fun show() {
-        for ((key, value) in tasks) {
-            key.serialize(PrintfProjectNameSerializer(out))
-            for (task in value) {
-                task.serilizezTask(PrintfTaskSerializer(out))
-            }
-            out.println()
-        }
+        tasks.serialize(PrintfProjectAndTaskSerializer(out))
     }
 
     override fun addProject(name: ProjectName) {
-        tasks[name] = ArrayList()
+        tasks.addProject(name)
     }
 
     override fun addTask(project: ProjectName, description: String) {
-        val projectTasks = tasks[project]
-        if (projectTasks == null) {
+
+        if (!tasks.addTask(project, description)) {
             out.printf("Could not find a project with the name \"%s\".", project)
             out.println()
             return
         }
-        projectTasks.add(Task(TaskId.nextId(), description, false))
     }
 
     override fun check(taskId: TaskId) {
@@ -67,16 +59,10 @@ class TaskList(private val `in`: BufferedReader, private val out: PrintWriter) :
     }
 
     private fun setDone(done: Boolean, taskId: TaskId) {
-        for ((_, value) in tasks) {
-            for (task in value) {
-                if (task.id == taskId) {
-                    task.isDone = done
-                    return
-                }
-            }
+        if (!tasks.setDone(done, taskId)) {
+            taskId.serialize(PrintfTaskIdSerializer(out, "Could not find a task with an ID of %d."))
+            out.println()
         }
-        taskId.serialize(PrintfTaskIdSerializer(out, "Could not find a task with an ID of %d."))
-        out.println()
     }
 
     override fun help() {
@@ -95,7 +81,7 @@ class TaskList(private val `in`: BufferedReader, private val out: PrintWriter) :
     }
 
     companion object {
-        private val QUIT = "quit"
+        private const val QUIT = "quit"
 
         @Throws(Exception::class)
         @JvmStatic
